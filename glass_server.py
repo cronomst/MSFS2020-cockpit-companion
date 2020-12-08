@@ -273,11 +273,13 @@ def thousandify(x):
 def glass():
 	return render_template("glass.html")
 
-
 @app.route('/attitude-indicator')
 def AttInd():
 	return render_template("attitude-indicator/index.html")
 
+@app.route('/radios')
+def radioStack():
+    return render_template("radios.html");
 
 def get_dataset(data_type):
 	if data_type == "navigation": request_to_action = request_location

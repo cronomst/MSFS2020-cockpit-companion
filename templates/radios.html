@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- JQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<!-- JQuery Knob -->	
+		<script src="/static/vendor/jquery-knob/jquery.knob.min.js"></script>
+		<!-- Bootstrap -->
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+		<style>
+			.major {
+			}
+			.minor {
+			}
+		</style>
+	</head>
+	<body>
+		<div class="radio-stack-buttons btn-group">
+			<table>
+				<tr>
+					<td>
+						<input type="radio" class="btn-check" name="btnradio" id="btnradio-com1" value="COM1" checked>
+						<label class="btn btn-outline-primary btn-lg d-block" for="btnradio-com1">COM 1</label>
+					</td>
+					<td>
+						<input type="radio" class="btn-check" name="btnradio" id="btnradio-com2" value="COM2">
+						<label class="btn btn-outline-primary btn-lg d-block" for="btnradio-com2">COM 2</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<input type="radio" class="btn-check" name="btnradio" id="btnradio-nav1" value="NAV1">
+						<label class="btn btn-outline-primary btn-lg d-block" for="btnradio-nav1">NAV 1</label>
+					</td>
+					<td>
+						<input type="radio" class="btn-check" name="btnradio" id="btnradio-nav2" value="NAV2">
+						<label class="btn btn-outline-primary btn-lg d-block" for="btnradio-nav2">NAV 2</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<input type="radio" class="btn-check" name="btnradio" id="btnradio-obi1" value="OBI1">
+						<label class="btn btn-outline-primary btn-lg d-block" for="btnradio-obi1">OBI 1</label>
+					</td>
+					<td>
+						<input type="radio" class="btn-check" name="btnradio" id="btnradio-obi2" value="OBI2">
+						<label class="btn btn-outline-primary btn-lg d-block" for="btnradio-obi2">OBI 2</label>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<div style="position:relative;width:250px;float:right;">
+			<div style="position:absolute;left:10px;top:10px">
+				<input class="knob major" value="0" data-width="200" data-height="200" data-thickness=".35">
+			</div>
+			<div style="position:absolute;left:60px;top:60px">
+				<input class="knob minor" value="0" data-width="100" data-height="100" data-thickness=".55">
+			</div>
+		</div>
+		<div style="position:relative;margin:auto;">
+			<button type="button" class="btn btn-danger" id="btn-transfer">&lt;-&gt</button>
+		</div>
+		
+		<script>
+			let knobMin = 0;
+			let knobMax = 9;
+			let selectedRadio = 'COM1';
+			
+			var radioEventTypes = {
+				"COM1": {
+					"major": "COM_RADIO_WHOLE",
+					"minor": "COM_RADIO_FRACT",
+					"transfer": "COM_STBY_RADIO_SWAP"
+				},
+				"COM2": {
+					"major": "COM2_RADIO_WHOLE",
+					"minor": "COM2_RADIO_FRACT",
+					"transfer": "COM2_RADIO_SWAP"
+				},
+				"NAV1": {
+					"major": "NAV1_RADIO_WHOLE",
+					"minor": "NAV1_RADIO_FRACT",
+					"transfer": "NAV1_RADIO_SWAP"
+				},
+				"NAV2": {
+					"major": "NAV2_RADIO_WHOLE",
+					"minor": "NAV2_RADIO_FRACT",
+					"transfer": "NAV2_RADIO_SWAP"
+				},
+				"OBI1": {
+					"major": "VOR1_OBI",
+					"minor": "VOR1_OBI",
+					"transfer": false
+				},
+				"OBI2": {
+					"major": "VOR2_OBI",
+					"minor": "VOR2_OBI",
+					"transfer": false
+				}
+			};
+			
+			$(".knob").knob({
+				'min': knobMin,
+				'max': knobMax,
+				'stopper': false,
+				'cursor': 20,
+				'displayInput': false
+			});
+			$('.knob').trigger('configure', {
+				'change' : function(value) {
+				    var prev = this.$.data('prev');
+					var current = this.cv
+					if (prev === undefined) {
+						this.$.data('prev', this.cv);
+					} else {
+						if (prev == knobMin && current == knobMax) {
+							decr(this.$.data('eventType'));
+						} else if (prev == knobMax && current == knobMin) {
+							incr(this.$.data('eventType'));
+						} else if (current < prev) {
+							decr(this.$.data('eventType'));
+						} else if (current > prev) {
+							incr(this.$.data('eventType'));
+						}
+						this.$.data('prev', this.cv);
+					}
+					
+				}
+			});
+			
+			$(function(){
+				$('input[name="btnradio"]').change(function(){
+					if ($(this).is(':checked')) {
+						var eventTypeMajor = radioEventTypes[$(this).val()].major;
+						var eventTypeMinor = radioEventTypes[$(this).val()].minor;
+						var eventTransfer = radioEventTypes[$(this).val()].transfer;
+						$('.major').data('eventType', eventTypeMajor);
+						$('.minor').data('eventType', eventTypeMinor);
+						$('#btn-transfer').data('eventType', eventTransfer);
+					}
+				});
+			});
+
+
+			$('.major').data('eventType', 'COM_RADIO_WHOLE');
+			$('.minor').data('eventType', 'COM_RADIO_FRACT');
+			$('#btn-transfer').data('eventType', 'COM_STBY_RADIO_SWAP');
+			$('#btn-transfer').click(function() {
+				transferRadio($('#btn-transfer').data('eventType'));
+			});
+			
+			function incr(eventType) {
+				triggerSimEvent (eventType + '_INC', 1, true);
+			}
+			
+			function decr(eventType) {
+				triggerSimEvent (eventType + '_DEC', 1, true);
+			}
+			
+			function transferRadio(eventType) {
+				if (eventType) {
+					triggerSimEvent(eventType, 0, true)
+				}
+			}
+			
+		</script>
+		<!-- Custom JS imports -->
+		<script src="/static/js/custom/getSimData-NoUI.js"></script>
+	</body>
+</html>
