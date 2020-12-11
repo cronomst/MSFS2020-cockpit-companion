@@ -264,6 +264,21 @@ request_cabin = [
 	'CABIN_NO_SMOKING_ALERT_SWITCH'
 ]
 
+request_radios = [
+	'COM_ACTIVE_FREQUENCY:1',
+	'COM_ACTIVE_FREQUENCY:2',
+    'COM_STANDBY_FREQUENCY:1',
+    'COM_STANDBY_FREQUENCY:2',
+    'NAV_ACTIVE_FREQUENCY:1',
+    'NAV_ACTIVE_FREQUENCY:2',
+    'NAV_STANDBY_FREQUENCY:1',
+    'NAV_STANDBY_FREQUENCY:2',
+    'ADF_ACTIVE_FREQUENCY:1',
+    'ADF_ACTIVE_FREQUENCY:2',
+    'ADF_STANDBY_FREQUENCY:1',
+    'ADF_STANDBY_FREQUENCY:2',
+    'TRANSPONDER_CODE:1'
+]
 
 def thousandify(x):
 	return f"{x:,}"
@@ -281,6 +296,10 @@ def AttInd():
 def radioStack():
     return render_template("radios.html");
 
+@app.route('/wiiu')
+def wiiu():
+    return render_template("wiiu.html");
+
 def get_dataset(data_type):
 	if data_type == "navigation": request_to_action = request_location
 	if data_type == "airspeed": request_to_action = request_airspeed
@@ -293,6 +312,7 @@ def get_dataset(data_type):
 	if data_type == "trim": request_to_action = request_trim
 	if data_type == "autopilot": request_to_action = request_autopilot
 	if data_type == 'cabin': request_to_action = request_cabin
+	if data_type == 'radios': request_to_action = request_radios
 	#if data_type == "ui": request_to_action = request_ui   # see comment above as to why I've removed this
 
 	return request_to_action

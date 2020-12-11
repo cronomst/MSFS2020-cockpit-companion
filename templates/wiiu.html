@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Wii U SimConnect</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- JQuery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script type=text/javascript>
+			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+		</script>
+		<script src="/static/js/custom/getSimData-NoUI.js"></script>
+		<style>
+			body {
+				background-color: #101010;
+			}
+			.selected {
+				border: 1px solid white;
+			}
+			.radio {
+				position: relative;
+				color: #c00000;
+			}
+			.com1 {
+				position: absolute;
+				left: 10px;
+				top: 10px;
+				width: 400px;
+				height: 200px;
+			}
+			.nav1 {
+				position: absolute;
+				left: 50%;
+				top: 10px;
+				width: 400px;
+				height: 200px;
+			}
+			.com2 {
+				position: absolute;
+				left: 10px;
+				top: 50%;
+				width: 400px;
+				height: 200px;
+			}
+			.nav2 {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				width: 400px;
+				height: 200px;
+			}
+			.radio-use, .radio-standby {
+				font-size: 3em;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<div class="radios">
+				<div class="radio com1 selected">
+					<div class="radio-use">0.0</div>
+					<div class="radio-standby">0.0</div>
+				</div>
+				<div class="radio com2">
+					<div class="radio-use">0.0</div>
+					<div class="radio-standby">0.0</div>
+				</div>
+				<div class="radio nav1">
+					<div class="radio-use">0.0</div>
+					<div class="radio-standby">0.0</div>
+				</div>
+				<div class="radio nav2">
+					<div class="radio-use">0.0</div>
+					<div class="radio-standby">0.0</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			var ACTIVE = "radio-use";
+			var STANDBY = "radio-standby";
+			var COM1 = "com1";
+			var COM2 = "com2";
+			var NAV1 = "nav1";
+			var NAV2 = "nav2";
+			var WHOLE = 0;
+			var FRACT = 1;
+			
+			var selectedRadio = COM1;
+			var timeoutInstance = null;
+			
+			function setFrequency(radio, activeOrStandby, frequency) {
+				if (radio == COM1 || radio == COM2) {
+					frequency = parseFloat(frequency).toFixed(3);
+				} else {
+					frequency = parseFloat(frequency).toFixed(2);
+				}
+				$("." + radio + " ." + activeOrStandby).html(frequency);
+			}
+			
+			function getFrequency(radio, activeOrStandby) {
+				return parseFloat($("." + radio + " ." + activeOrStandby).html());
+			}
+			
+			function updateDisplay() {
+				setFrequency(COM1, ACTIVE, radios.COM1.ACTIVE);
+				setFrequency(COM1, STANDBY, radios[COM1][STANDBY]);
+				
+			}
+			
+			function swapActive(radio) {
+				var eventType;
+				switch (radio) {
+					case NAV1:
+						eventType = 'NAV1_RADIO_SWAP';
+						break;
+					case NAV2:
+						eventType = 'NAV2_RADIO_SWAP';
+						break;
+					case COM1:
+						eventType = 'COM_STBY_RADIO_SWAP';
+						break;
+					case COM2:
+						eventType = 'COM2_RADIO_SWAP';
+						break;
+				}
+				if (eventType) {
+					// Cancel any pending update event and just update frequency immediately
+					if (timeoutInstance !== null) {
+						clearTimeout(timeoutInstance);
+					}
+					var frequency = getFrequency(radio, STANDBY);
+					updateSim(radio, STANDBY, frequency, function(){
+						triggerSimEventWithCallback(eventType, 0, function() {
+							refreshFromSim();
+						});
+					});
+				}
+			}
+			
+			function setSelected(selected) {
+				selectedRadio = selected;
+				$(".radios").children().removeClass("selected");
+				$(".radios ." + selected).addClass("selected");
+			}
+			
+			function increment(radio, wholeOrFract, direction) {
+				var frequency = getFrequency(radio, STANDBY);
+				var step = 1 * direction;
+				var decimalPlaces;
+				if (radio == COM1 || radio == COM2) {
+					decimalPlaces = 3;
+				} else {
+					decimalPlaces = 2;
+				}
+				if (wholeOrFract == FRACT) {
+					if (radio == NAV1 || radio == NAV2) {
+						step = 0.05 * direction;
+					} else if (radio == COM1 || radio == COM2) {
+						step = 0.025 * direction;
+					}
+					frequency = getFractIncrement(radio, step);
+				} else {
+					frequency = getWholeIncrement(radio, step);
+				}
+				
+				frequency = frequency.toFixed(decimalPlaces);
+				setFrequency(radio, STANDBY, frequency);
+				if (timeoutInstance !== null) {
+					clearTimeout(timeoutInstance);
+				}
+				timeoutInstance = setTimeout(function() { updateSim(radio, STANDBY, frequency); }, 3000);
+			}
+			
+			function getWholeIncrement(radio, step) {
+				var frequency = getFrequency(radio, STANDBY);
+				var whole = Math.floor(frequency); // Use floor rather than trunc due to old Wii U Javascript support
+				var fract = frequency - whole;
+				whole += step;
+				
+				if (radio == NAV1 || radio == NAV2) {
+					if (whole < 108) {
+						whole = 117;
+					}
+					if (whole > 117) {
+						whole = 108;
+					}
+				} else {
+					if (whole < 118) {
+						whole = 136;
+					}
+					if (whole > 136) {
+						whole = 118;
+					}
+				}
+				frequency = whole + fract;
+				return frequency;
+			}
+			
+			function getFractIncrement(radio, step) {
+				var frequency = getFrequency(radio, STANDBY);
+				var whole = Math.floor(frequency); // Wii U browser doesn't support Math.trunc
+				var fract = frequency - whole;
+				fract += step;
+				fract = fract.toFixed(3);
+				if (radio == NAV1 || radio == NAV2) {
+					if (fract < 0.0) {
+						fract = 0.95;
+					}
+					if (fract >= 1.0) {
+						fract = 0.0;
+					}
+				} else {
+					if (fract < 0.0) {
+						fract = 0.975;
+					}
+					if (fract >= 1.0) {
+						fract = 0.0;
+					}
+				}
+				frequency = whole + parseFloat(fract);
+				return frequency;
+			}
+			
+			function updateSim(radio, activeOrStandby, frequency, callback) {
+				if (radio == COM1) {
+					triggerSimEventWithCallback('COM_STBY_RADIO_SET', getComToBCD(frequency), callback);
+				} else if (radio == COM2) {
+					triggerSimEventWithCallback('COM2_STBY_RADIO_SET', getComToBCD(frequency), callback);
+				} else if (radio == NAV1) {
+					triggerSimEventWithCallback('NAV1_STBY_SET', getNavToBCD(frequency), callback);
+				} else if (radio == NAV2) {
+					triggerSimEventWithCallback('NAV2_STBY_SET', getNavToBCD(frequency), callback);
+				}
+			}
+			
+			function getComToBCD(val) {
+				bcd = parseInt(val * 100 - 10000, 16);
+				return bcd;
+			}
+			
+			function getNavToBCD(val) {
+				// SimConnect assumes all NAV frequencies start with "1",
+				// so this removes the leading one and moves the decimal
+				// twice to the right, then converts the value to hex,
+				// effectively packing it into BCD.
+				bcd = parseInt(val * 100 - 10000, 16);
+				return bcd;
+			}
+			
+			function refreshFromSim() {
+				getSimulatorDataset('radios', function(data) {
+					setFrequency(COM1, ACTIVE, data["COM_ACTIVE_FREQUENCY:1"]);
+					setFrequency(COM1, STANDBY, data["COM_STANDBY_FREQUENCY:1"]);
+					setFrequency(COM2, ACTIVE, data["COM_ACTIVE_FREQUENCY:2"]);
+					setFrequency(COM2, STANDBY, data["COM_STANDBY_FREQUENCY:2"]);
+					setFrequency(NAV1, ACTIVE, data["NAV_ACTIVE_FREQUENCY:1"]);
+					setFrequency(NAV1, STANDBY, data["NAV_STANDBY_FREQUENCY:1"]);
+					setFrequency(NAV2, ACTIVE, data["NAV_ACTIVE_FREQUENCY:2"]);
+					setFrequency(NAV2, STANDBY, data["NAV_STANDBY_FREQUENCY:2"]);
+				});
+			}
+			
+			$("body").keydown(function(e) {
+				var Key = {
+				  LEFT:   37,
+				  UP:     38,
+				  RIGHT:  39,
+				  DOWN:   40
+				};
+				switch (e.which) {
+					case Key.LEFT:
+						increment(selectedRadio, FRACT, -1);
+						break;
+					case Key.RIGHT:
+						increment(selectedRadio, FRACT, 1);
+						break;
+					case Key.UP:
+						increment(selectedRadio, WHOLE, 1);
+						break;
+					case Key.DOWN:
+						increment(selectedRadio, WHOLE, -1);
+						break;
+					case 13:
+						swapActive(selectedRadio);
+						break;
+				}
+				event.preventDefault();
+				return false;
+			});
+			
+			$('.com1').click(function() { setSelected(COM1); });
+			$('.com2').click(function() { setSelected(COM2); });
+			$('.nav1').click(function() { setSelected(NAV1); });
+			$('.nav2').click(function() { setSelected(NAV2); });
+			
+			refreshFromSim();
+		</script>
+		
+	</body>
+</html>
