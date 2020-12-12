@@ -9,47 +9,73 @@
 			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 		</script>
 		<script src="/static/js/custom/getSimData-NoUI.js"></script>
+		<script type="text/javascript" src="/static/vendor/segment-display/segment-display.js"></script>
+		
 		<style>
 			body {
 				background-color: #101010;
 			}
-			.selected {
+			.radio.selected {
 				border: 1px solid white;
 			}
 			.radio {
 				position: relative;
 				color: #c00000;
+				border: 1px solid #505050;
 			}
 			.com1 {
 				position: absolute;
-				left: 10px;
-				top: 10px;
+				left: 20px;
+				top: 5px;
 				width: 400px;
-				height: 200px;
+				height: 190px;
 			}
 			.nav1 {
 				position: absolute;
 				left: 50%;
-				top: 10px;
+				top: 5px;
 				width: 400px;
-				height: 200px;
+				height: 190px;
 			}
 			.com2 {
 				position: absolute;
-				left: 10px;
-				top: 50%;
+				left: 20px;
+				top: 205px;
 				width: 400px;
-				height: 200px;
+				height: 190px;
 			}
 			.nav2 {
 				position: absolute;
 				left: 50%;
-				top: 50%;
+				top: 205px;
 				width: 400px;
-				height: 200px;
+				height: 190px;
 			}
 			.radio-use, .radio-standby {
 				font-size: 3em;
+				margin-left: 30px;
+				width: 150px;
+				height: 100px;
+			}
+			.radio-labels {
+				color: #d0d0d0;
+				font-weight: bold;
+				font-family: sans-serif;
+				margin-left: 1em;
+				position: relative;
+			}
+			.radio-label-name {
+				position: absolute;
+				top: 60px;
+			}
+			.radio-label-use {
+				position: absolute;
+				left: 20%;
+			}
+			
+			.radio-label-standby {
+				position: absolute;
+				left: 65%
 			}
 		</style>
 	</head>
@@ -57,20 +83,40 @@
 		<div>
 			<div class="radios">
 				<div class="radio com1 selected">
-					<div class="radio-use">0.0</div>
-					<div class="radio-standby">0.0</div>
+					<canvas id="display-com1-radio-use" class="radio-use">0.0</canvas>
+					<canvas id="display-com1-radio-standby" class="radio-standby">0.0</canvas>
+					<div class="radio-labels">
+						<span class="radio-label-name">COM1</span>
+						<span class="radio-label-use">USE</span>
+						<span class="radio-label-standby">STBY</span>
+					</div>
 				</div>
 				<div class="radio com2">
-					<div class="radio-use">0.0</div>
-					<div class="radio-standby">0.0</div>
+					<canvas id="display-com2-radio-use" class="radio-use">0.0</canvas>
+					<canvas id="display-com2-radio-standby" class="radio-standby">0.0</canvas>
+					<div class="radio-labels">
+						<span class="radio-label-name">COM2</span>
+						<span class="radio-label-use">USE</span>
+						<span class="radio-label-standby">STBY</span>
+					</div>
 				</div>
 				<div class="radio nav1">
-					<div class="radio-use">0.0</div>
-					<div class="radio-standby">0.0</div>
+					<canvas id="display-nav1-radio-use" class="radio-use">0.0</canvas>
+					<canvas id="display-nav1-radio-standby" class="radio-standby">0.0</canvas>
+					<div class="radio-labels">
+						<span class="radio-label-name">NAV1</span>
+						<span class="radio-label-use">USE</span>
+						<span class="radio-label-standby">STBY</span>
+					</div>
 				</div>
 				<div class="radio nav2">
-					<div class="radio-use">0.0</div>
-					<div class="radio-standby">0.0</div>
+					<canvas id="display-nav2-radio-use" class="radio-use">0.0</canvas>
+					<canvas id="display-nav2-radio-standby" class="radio-standby">0.0</canvas>
+					<div class="radio-labels">
+						<span class="radio-label-name">NAV2</span>
+						<span class="radio-label-use">USE</span>
+						<span class="radio-label-standby">STBY</span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -94,6 +140,7 @@
 					frequency = parseFloat(frequency).toFixed(2);
 				}
 				$("." + radio + " ." + activeOrStandby).html(frequency);
+				displays[radio][activeOrStandby].setValue(frequency);
 			}
 			
 			function getFrequency(radio, activeOrStandby) {
@@ -259,6 +306,23 @@
 				});
 			}
 			
+			function createSegmentDisplay(pattern, id) {
+				var display = new SegmentDisplay(id);
+				display.pattern         = pattern;
+				display.displayAngle    = 0;
+				display.digitHeight     = 20;
+				display.digitWidth      = 14;
+				display.digitDistance   = 2.5;
+				display.segmentWidth    = 2;
+				display.segmentDistance = 0.3;
+				display.segmentCount    = 7;
+				display.cornerType      = 1;
+				display.colorOn         = "#e95d0f";
+				display.colorOff        = "#250f02"; /* Original: "#4b1e05"; */
+				display.setValue("")
+				return display;
+			}
+			
 			$("body").keydown(function(e) {
 				var Key = {
 				  LEFT:   37,
@@ -287,12 +351,38 @@
 				return false;
 			});
 			
-			$('.com1').click(function() { setSelected(COM1); });
-			$('.com2').click(function() { setSelected(COM2); });
-			$('.nav1').click(function() { setSelected(NAV1); });
-			$('.nav2').click(function() { setSelected(NAV2); });
+			$('.com1').mousedown(function() { setSelected(COM1); });
+			$('.com2').mousedown(function() { setSelected(COM2); });
+			$('.nav1').mousedown(function() { setSelected(NAV1); });
+			$('.nav2').mousedown(function() { setSelected(NAV2); });
+			
+			$('.com1 button').click(function() { setSelected(COM1); });
+			$('.com2 button').click(function() { setSelected(COM2); });
+			$('.nav1 button').click(function() { setSelected(NAV1); });
+			$('.nav2 button').click(function() { setSelected(NAV2); });
 			
 			refreshFromSim();
+		</script>
+		<script type="text/javascript">
+			var displays = {
+				"com1": {
+					"radio-use": createSegmentDisplay('###.###', 'display-' + COM1 + '-' + ACTIVE),
+					"radio-standby": createSegmentDisplay('###.###', 'display-' + COM1 + '-' + STANDBY)
+				},
+				"com2": {
+					"radio-use": createSegmentDisplay('###.###', 'display-' + COM2 + '-' + ACTIVE),
+					"radio-standby": createSegmentDisplay('###.###', 'display-' + COM2 + '-' + STANDBY)
+				},
+				"nav1": {
+					"radio-use": createSegmentDisplay('###.##      ', 'display-' + NAV1 + '-' + ACTIVE),
+					"radio-standby": createSegmentDisplay('###.##      ', 'display-' + NAV1 + '-' + STANDBY)
+				},
+				"nav2": {
+					"radio-use": createSegmentDisplay('###.##      ', 'display-' + NAV2 + '-' + ACTIVE),
+					"radio-standby": createSegmentDisplay('###.##      ', 'display-' + NAV2 + '-' + STANDBY)
+				}
+			};
+			
 		</script>
 		
 	</body>
