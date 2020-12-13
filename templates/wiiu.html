@@ -15,10 +15,6 @@
 			body {
 				background-color: #101010;
 			}
-			.radio.selected .radio-label-name{
-				border-bottom: 1px solid white;
-
-			}
 			.radio {
 				position: relative;
 				color: #c00000;
@@ -79,6 +75,14 @@
 				position: absolute;
 				left: 65%
 			}
+			svg {
+				float: right;
+				width: 80px;
+				height: 80px;
+			}
+			.radio.selected svg circle:first-child {
+				stroke: yellow;
+			}
 		</style>
 	</head>
 	<body>
@@ -92,6 +96,11 @@
 						<span class="radio-label-use">USE</span>
 						<span class="radio-label-standby">STBY</span>
 					</div>
+					<svg>
+						<circle cx="40" cy="40" r="20" stroke="#303030" fill="#303030" stroke-width="1" />
+						<circle cx="40" cy="40" r="16" stroke="#a0a0a0" fill="#303030" stroke-width="2" />
+						<circle cx="40" cy="40" r="12" stroke="#a0a0a0" fill="#404040" stroke-width="2" />
+					</svg>
 				</div>
 				<div class="radio com2">
 					<canvas id="display-com2-radio-use" class="radio-use">0.0</canvas>
@@ -101,6 +110,11 @@
 						<span class="radio-label-use">USE</span>
 						<span class="radio-label-standby">STBY</span>
 					</div>
+					<svg>
+						<circle cx="40" cy="40" r="20" stroke="#303030" fill="#303030" stroke-width="1" />
+						<circle cx="40" cy="41" r="16" stroke="#a0a0a0" fill="#303030" stroke-width="2" />
+						<circle cx="40" cy="42" r="12" stroke="#a0a0a0" fill="#404040" stroke-width="2" />
+					</svg>
 				</div>
 				<div class="radio nav1">
 					<canvas id="display-nav1-radio-use" class="radio-use">0.0</canvas>
@@ -110,6 +124,11 @@
 						<span class="radio-label-use">USE</span>
 						<span class="radio-label-standby">STBY</span>
 					</div>
+					<svg>
+						<circle cx="40" cy="40" r="20" stroke="#303030" fill="#303030" stroke-width="1" />
+						<circle cx="41" cy="40" r="16" stroke="#a0a0a0" fill="#303030" stroke-width="2" />
+						<circle cx="42" cy="40" r="12" stroke="#a0a0a0" fill="#404040" stroke-width="2" />
+					</svg>
 				</div>
 				<div class="radio nav2">
 					<canvas id="display-nav2-radio-use" class="radio-use">0.0</canvas>
@@ -119,6 +138,11 @@
 						<span class="radio-label-use">USE</span>
 						<span class="radio-label-standby">STBY</span>
 					</div>
+					<svg>
+						<circle cx="40" cy="40" r="20" stroke="#303030" fill="#303030" stroke-width="1" />
+						<circle cx="41" cy="41" r="16" stroke="#a0a0a0" fill="#303030" stroke-width="2" />
+						<circle cx="42" cy="42" r="12" stroke="#a0a0a0" fill="#404040" stroke-width="2" />
+					</svg>
 				</div>
 			</div>
 		</div>
