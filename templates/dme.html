@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>FS DME</title>
+		<meta name="viewport" content="width=320" />
+		<!-- JQuery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script type=text/javascript>
+			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+		</script>
+		<script src="/static/js/custom/getSimData-NoUI.js"></script>
+		<style>
+			body {
+				background-color: #000080;
+				color: #f0f0f0;
+			}
+			.distance {
+				font-size: xx-large;
+			}
+			.label {
+				border-bottom: 1px solid #f0f0f0;
+			}
+			.dme {
+				margin-bottom: 2em;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="dmes">
+			<div class="dme" id="dme1">
+				<div class="label">DME 1</div>
+				<div class="distance">0.0 nm</div>
+			</div>
+			<div class="dme" id="dme2">
+				<div class="label">DME 2</div>
+				<div class="distance">0.0 nm</div>
+			</div>
+		</div>
+		<script>
+			function updateAll() {
+				getSimulatorDataset('dme', function(data) {
+					setDME("dme1", data["NAV_DME:1"]);
+					setDME("dme2", data["NAV_DME:2"]);
+				});
+			}
+			
+			
+			
+			function setDME(id, value) {
+				if (value < 0) {
+					value = 0;
+				}
+				var formattedValue = value.toFixed(1);
+				$('#' + id + ' .distance').html(formattedValue + ' nm');
+			}
+			
+			setInterval(function() { updateAll(); }, 3000);
+		</script>
+	</body>
+</html>

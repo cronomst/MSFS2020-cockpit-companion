@@ -280,6 +280,13 @@ request_radios = [
     'TRANSPONDER_CODE:1'
 ]
 
+request_dme = [
+	'NAV_DME:1',
+	'NAV_DME:2',
+    'NAV_DMESPEED:1',
+    'NAV_DMESPEED:2'
+]
+
 def thousandify(x):
 	return f"{x:,}"
 
@@ -299,6 +306,10 @@ def radioStack():
 @app.route('/wiiu')
 def wiiu():
     return render_template("wiiu.html");
+    
+@app.route('/dme')
+def dme():
+    return render_template("dme.html");
 
 def get_dataset(data_type):
 	if data_type == "navigation": request_to_action = request_location
@@ -313,6 +324,7 @@ def get_dataset(data_type):
 	if data_type == "autopilot": request_to_action = request_autopilot
 	if data_type == 'cabin': request_to_action = request_cabin
 	if data_type == 'radios': request_to_action = request_radios
+	if data_type == 'dme': request_to_action = request_dme
 	#if data_type == "ui": request_to_action = request_ui   # see comment above as to why I've removed this
 
 	return request_to_action
