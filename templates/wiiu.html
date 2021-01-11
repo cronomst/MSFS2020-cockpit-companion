@@ -228,7 +228,7 @@
 					if (radio == NAV1 || radio == NAV2) {
 						step = 0.05 * direction;
 					} else if (radio == COM1 || radio == COM2) {
-						step = 0.025 * direction;
+						step = 0.005 * direction;
 					}
 					frequency = getFractIncrement(radio, step);
 				} else {
@@ -282,10 +282,14 @@
 						fract = 0.0;
 					}
 				} else {
-					if (fract < 0.0) {
-						fract = 0.975;
+					// Skip invalid 8.33khz channels (XXX.X20, XXX.X45, XXX.X70, XXX.X95)
+					if (fract.endsWith("20") || fract.endsWith("45") || fract.endsWith("70") || fract.endsWith("95")) {
+						return getFractIncrement(radio, step*2.0);
 					}
-					if (fract >= 1.0) {
+					if (fract < 0.0) {
+						fract = 0.990;
+					}
+					if (fract >= 0.995) {
 						fract = 0.0;
 					}
 				}
